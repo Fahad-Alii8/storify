@@ -1,9 +1,14 @@
-export default function App() {
+import { RouterProvider } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import router from './routes';
+
+function App() {
   return (
-    <div>
-      <h1 className="text-3xl font-bold underline">
-        Hello world!
-      </h1>
-    </div>
-  )
+    <>
+      <Toaster position="top-center" reverseOrder={false} />
+      <RouterProvider router={router} />
+    </>
+  );
 }
+
+export default App;
