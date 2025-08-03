@@ -1,5 +1,6 @@
 import api from ".";
 import type { CreateProductData } from "../interfaces/product.interface";
+
 export interface GetProductParams {
   page?: number;
   limit?: number;
@@ -9,6 +10,7 @@ export interface GetProductParams {
   category?: string;
   status?: string;
 }
+
 export const createProduct = async (productData: CreateProductData) => {
   const formData = new FormData();
   formData.append("name", productData.name);
@@ -21,13 +23,11 @@ export const createProduct = async (productData: CreateProductData) => {
   if (productData.image && productData.image[0]) {
     formData.append("image", productData.image[0]);
   }
-  console.log("FormData Entries:", [...formData.entries()]);
   const response = await api.post("/products", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
-  console.log("Raw Axios Response:", response);
   return response;
 };
 
@@ -44,7 +44,14 @@ export const getAllProducts = (params: GetProductParams = {}) => {
     },
   });
 };
+
+export const deleteProduct = async (id: string) => {
+  const response = await api.delete(`/products/${id}`);
+  return response.data;
+};
+
 export default {
   createProduct,
   getAllProducts,
+  deleteProduct,
 };

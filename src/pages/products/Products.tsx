@@ -7,9 +7,18 @@ import type { CreateProductData } from '../../interfaces/product.interface';
 import type { SubmitHandler } from 'react-hook-form';
 import AddProductForm from '../../components/products/AddProduct';
 import { Pencil, Trash2 } from 'lucide-react';
+import ConfirmationModal from '../../components/modal/ConfirmationModal';
+
+interface ProductRow {
+    _id: string;
+    name: string;
+    [key: string]: any;
+}
 
 export default function Products() {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [productToDelete, setProductToDelete] = useState<ProductRow | null>(null);
+
     const {
         products,
         isLoadingProducts,
@@ -21,27 +30,37 @@ export default function Products() {
         searchParams,
         handleCreateProduct,
         isCreatingProduct,
+        handleDeleteProduct,
+        isDeletingProduct,
     } = useProducts();
 
     const columns = [
         { key: 'image', label: 'Image', },
         { key: 'name', label: 'Name', sortable: true },
         { key: 'price', label: 'Price', sortable: true },
-        { key: 'description', label: 'Description', sortable: true },
+        { key: 'description', label: 'Description' },
         { key: 'status', label: 'Status', sortable: true },
         { key: 'category', label: 'Category', sortable: true },
     ];
+
+    const handleConfirmDelete = async () => {
+        if (productToDelete) {
+            await handleDeleteProduct(productToDelete._id);
+            setProductToDelete(null);
+        }
+    };
+
     const actions = [
         {
             label: <Pencil className="w-4 h-4 text-blue-600 cursor-pointer" />,
-            onClick: (row: any) => {
+            onClick: (row: ProductRow) => {
                 console.log('Edit product:', row);
             },
         },
         {
             label: <Trash2 className="w-4 h-4 text-red-600 cursor-pointer" />,
-            onClick: (row: any) => {
-                console.log('Delete product:', row);
+            onClick: (row: ProductRow) => {
+                setProductToDelete(row);
             },
         },
     ];
@@ -49,7 +68,7 @@ export default function Products() {
     const handleFormSubmit: SubmitHandler<CreateProductData> = async (data) => {
         try {
             await handleCreateProduct(data);
-            setIsModalOpen(false);
+            setIsAddModalOpen(false);
         } catch (error) {
             console.error('Error creating product:', error);
         }
@@ -59,7 +78,7 @@ export default function Products() {
         <div className="min-h-screen bg-gray-50">
             <DataTable
                 buttonText="Add Product"
-                onAdd={() => setIsModalOpen(true)}
+                onAdd={() => setIsAddModalOpen(true)}
                 columns={columns}
                 data={products}
                 actions={actions}
@@ -74,22 +93,36 @@ export default function Products() {
                     sortBy: searchParams.sortBy ?? 'createdAt',
                     sort: searchParams.sort ?? 'desc',
                 }}
-
                 searchPlaceholder="Search products..."
                 isLoading={isLoadingProducts || isFetchingProducts}
             />
 
             <Modal
-                isOpen={isModalOpen}
-                onClose={() => !isCreatingProduct && setIsModalOpen(false)}
+                isOpen={isAddModalOpen}
+                onClose={() => !isCreatingProduct && setIsAddModalOpen(false)}
                 title="Add New Product"
             >
                 <AddProductForm
                     onSubmit={handleFormSubmit}
-                    onCancel={() => setIsModalOpen(false)}
+                    onCancel={() => setIsAddModalOpen(false)}
                     isLoading={isCreatingProduct}
                 />
             </Modal>
+
+            <ConfirmationModal
+                isOpen={!!productToDelete}
+                onClose={() => setProductToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                isLoading={isDeletingProduct}
+                title="Confirm Deletion"
+                message={
+                    <>
+                        Are you sure you want to delete the product "<strong>{productToDelete?.name}</strong>"? This action cannot be undone.
+                    </>
+                }
+                confirmText="Delete"
+                confirmButtonVariant="danger"
+            />
         </div>
     );
 }

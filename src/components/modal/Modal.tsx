@@ -1,4 +1,3 @@
-// components/modal/Modal.tsx
 
 import { X } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
