@@ -3,6 +3,7 @@ import { AxiosError } from "axios";
 import {
   createProduct as createProductApi,
   getAllProducts as getAllProductsApi,
+  deleteProduct as deleteProductApi,
   type GetProductParams,
 } from "../../../apis/product.api";
 import type { CreateProductData } from "../../../interfaces/product.interface";
@@ -33,7 +34,6 @@ export const useProducts = () => {
   const handlePageChange = (page: number, limit?: number) => {
     setSearchParams((prev) => ({ ...prev, page, limit: limit || prev.limit }));
   };
-  console.log("productsData", productsData);
 
   const handleSearchChange = (search: string) => {
     setSearchParams((prev) => ({ ...prev, search, page: 1 }));
@@ -62,12 +62,29 @@ export const useProducts = () => {
         const errorMessage =
           error.response?.data?.error || "Failed to create product.";
         toast.error(errorMessage);
-        console.error("Create Product Error:", error);
+      },
+    });
+
+  const { mutateAsync: deleteProduct, isPending: isDeletingProduct } =
+    useMutation({
+      mutationFn: (id: string) => deleteProductApi(id),
+      onSuccess: () => {
+        toast.success("Product deleted successfully!");
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      },
+      onError: (error: AxiosError<{ error?: string }>) => {
+        const errorMessage =
+          error.response?.data?.error || "Failed to delete product.";
+        toast.error(errorMessage);
       },
     });
 
   const handleCreateProduct = async (data: CreateProductData) => {
     return await createProduct(data);
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    await deleteProduct(id);
   };
 
   const products = productsData?.data?.products || [];
@@ -89,5 +106,7 @@ export const useProducts = () => {
     searchParams,
     handleCreateProduct,
     isCreatingProduct,
+    handleDeleteProduct,
+    isDeletingProduct,
   };
 };
